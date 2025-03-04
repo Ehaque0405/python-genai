@@ -56,9 +56,9 @@ class _BasePager(Generic[T]):
 
   @property
   def page(self) -> list[T]:
-    """Returns the current page, which is a list of items.
+    """Returns a subset of the entire list of items. 
 
-    The returned list of items is a subset of the entire list.
+    For the number of items returned, see `pageSize()`.
 
     Usage:
 
@@ -88,9 +88,7 @@ class _BasePager(Generic[T]):
 
   @property
   def page_size(self) -> int:
-    """Returns the length of the page fetched each time by this pager.
-
-    The number of items in the page is less than or equal to the page length.
+    """Returns the maximum number of items fetched by the pager at one time.
 
     Usage:
 
