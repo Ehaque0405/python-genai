@@ -203,7 +203,7 @@ class Chat(_BaseChat):
     """
 
     input_content = t.t_content(self._modules._api_client, message)
-    response = self._modules.generate_content(
+    response: GenerateContentResponse = self._modules.generate_content(
         model=self._model,
         contents=self._curated_history + [input_content],
         config=config if config else self._config,

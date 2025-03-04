@@ -202,11 +202,12 @@ class BaseModel(pydantic.BaseModel):
       ser_json_bytes='base64',
       val_json_bytes='base64',
   )
+  T: typing.ClassVar = typing.TypeVar('T', bound='BaseModel')
 
   @classmethod
   def _from_response(
-      cls, *, response: dict[str, object], kwargs: dict[str, object]
-  ) -> 'BaseModel':
+      cls: typing.Type[T], *, response: dict[str, object], kwargs: dict[str, object]
+  ) -> T:
     # To maintain forward compatibility, we need to remove extra fields from
     # the response.
     # We will provide another mechanism to allow users to access these fields.

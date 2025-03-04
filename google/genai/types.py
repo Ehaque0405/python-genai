@@ -2911,6 +2911,7 @@ class GenerateContentResponse(_common.BaseModel):
       default=None,
       description="""Parsed response if response_schema is provided. Not available for streaming.""",
   )
+  T: typing.ClassVar = typing.TypeVar('T', bound='GenerateContentResponse')
 
   @property
   def text(self) -> Optional[str]:
@@ -3012,8 +3013,11 @@ class GenerateContentResponse(_common.BaseModel):
 
   @classmethod
   def _from_response(
-      cls, *, response: dict[str, object], kwargs: dict[str, object]
-  ) -> _common.BaseModel:
+      cls: typing.Type[T],
+      *,
+      response: dict[str, object],
+      kwargs: dict[str, object],
+  ) -> T:
     result = super()._from_response(response=response, kwargs=kwargs)
 
     # Handles response schema.
