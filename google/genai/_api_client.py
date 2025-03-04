@@ -19,6 +19,7 @@
 The BaseApiClient is intended to be a private module and is subject to change.
 """
 
+import anyio
 import asyncio
 import copy
 from dataclasses import dataclass
@@ -118,8 +119,9 @@ def _load_auth(*, project: Union[str, None]) -> tuple[Credentials, str]:
   return credentials, project
 
 
-def _refresh_auth(credentials: Credentials) -> None:
+def _refresh_auth(credentials: Credentials) -> Credentials:
   credentials.refresh(Request())
+  return credentials
 
 
 @dataclass
@@ -508,13 +510,14 @@ class BaseApiClient:
             self._credentials.quota_project_id
         )
     if stream:
-      httpx_request = httpx.Request(
+      aclient = httpx.AsyncClient()
+      httpx_request = aclient.build_request(
           method=http_request.method,
           url=http_request.url,
           content=json.dumps(http_request.data),
           headers=http_request.headers,
+          timeout=http_request.timeout,
       )
-      aclient = httpx.AsyncClient()
       response = await aclient.send(
           httpx_request,
           stream=stream,
@@ -746,16 +749,17 @@ class BaseApiClient:
     returns:
           The response json object from the finalize request.
     """
-    return await asyncio.to_thread(
-        self.upload_file,
-        file_path,
-        upload_url,
-        upload_size,
-    )
+    if isinstance(file_path, io.IOBase):
+      return await self._async_upload_fd(file_path, upload_url, upload_size)
+    else:
+      file = anyio.Path(file_path)
+      fd = await file.open('rb')
+      async with fd:
+        return await self._async_upload_fd(fd, upload_url, upload_size)
 
   async def _async_upload_fd(
       self,
-      file: io.IOBase,
+      file: Union[io.IOBase, anyio.AsyncFile],
       upload_url: str,
       upload_size: int,
   ) -> str:
@@ -770,12 +774,46 @@ class BaseApiClient:
     returns:
           The response json object from the finalize request.
     """
-    return await asyncio.to_thread(
-        self._upload_fd,
-        file,
-        upload_url,
-        upload_size,
-    )
+    async with httpx.AsyncClient() as aclient:
+      offset = 0
+      # Upload the file in chunks
+      while True:
+        if isinstance(file, io.IOBase):
+          file_chunk = file.read(1024 * 1024 * 8)  # 8 MB chunk size
+        else:
+          file_chunk = await file.read(1024 * 1024 * 8)  # 8 MB chunk size
+        chunk_size = 0
+        if file_chunk:
+          chunk_size = len(file_chunk)
+        upload_command = 'upload'
+        # If last chunk, finalize the upload.
+        if chunk_size + offset >= upload_size:
+          upload_command += ', finalize'
+        response = await aclient.request(
+            method='POST',
+            url=upload_url,
+            content=file_chunk,
+            headers={
+                'X-Goog-Upload-Command': upload_command,
+                'X-Goog-Upload-Offset': str(offset),
+                'Content-Length': str(chunk_size),
+            },
+        )
+        offset += chunk_size
+        if response.headers.get('x-goog-upload-status') != 'active':
+          break  # upload is complete or it has been interrupted.
+
+        if upload_size <= offset:  # Status is not finalized.
+          raise ValueError(
+              'All content has been uploaded, but the upload status is not'
+              f' finalized. {response.headers}, body: {response.json()}'
+          )
+      if response.headers.get('x-goog-upload-status') != 'final':
+        raise ValueError(
+            'Failed to upload file: Upload status is not finalized. headers:'
+            f' {response.headers}, body: {response.json()}'
+        )
+      return response.json()
 
   async def async_download_file(self, path: str, http_options):
     """Downloads the file data.
@@ -787,11 +825,30 @@ class BaseApiClient:
     returns:
           The file bytes
     """
-    return await asyncio.to_thread(
-        self.download_file,
-        path,
-        http_options,
+    http_request = self._build_request(
+        'get', path=path, request_dict={}, http_options=http_options
     )
+
+    data: str | bytes | None = None
+    if http_request.data:
+      if not isinstance(http_request.data, bytes):
+        data = json.dumps(http_request.data)
+      else:
+        data = http_request.data
+
+    async with httpx.AsyncClient(follow_redirects=True) as aclient:
+      response = await aclient.request(
+          method=http_request.method,
+          url=http_request.url,
+          headers=http_request.headers,
+          content=data,
+          timeout=http_request.timeout,
+      )
+      errors.APIError.raise_for_response(response)
+
+      return HttpResponse(
+          response.headers, byte_stream=[response.read()]
+      ).byte_stream[0]
 
   # This method does nothing in the real api client. It is used in the
   # replay_api_client to verify the response from the SDK method matches the
