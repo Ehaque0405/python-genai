@@ -35,7 +35,7 @@ client = genai.Client(api_key='GEMINI_API_KEY')
 ```python
 # Only run this block for Vertex AI API
 client = genai.Client(
-    vertexai=True, project='your-project-id', location='us-central1'
+    vertexai=True, project='gen-lang-client-0870337308', location='https://console.cloud.google.com/iam-admin/settings?chat=true&project=gen-lang-client-0870337308'
 )
 ```
 
@@ -48,16 +48,17 @@ on Vertex AI or the ML Dev Gemini API.
 **ML Dev Gemini API:** Set `GOOGLE_API_KEY` as shown below:
 
 ```bash
-export GOOGLE_API_KEY='your-api-key'
+export GOOGLE_API_KEY='AIzaSyBzFSMBg1np01oLOmNiuPI1JXDzJUl0BA8'
 ```
 
-**Vertex AI API:** Set `GOOGLE_GENAI_USE_VERTEXAI`, `GOOGLE_CLOUD_PROJECT`
+**Vertex AI API:** Set `GOOGLE_GENAI_USE_VERTEXAI`, `gen-lang-client-0870337308`
 and `GOOGLE_CLOUD_LOCATION`, as shown below:
 
 ```bash
 export GOOGLE_GENAI_USE_VERTEXAI=true
-export GOOGLE_CLOUD_PROJECT='your-project-id'
-export GOOGLE_CLOUD_LOCATION='us-central1'
+export GOOGLE_CLOUD_PROJECT='gen-lang-client-0870337308'
+export GOOGLE_CLOUD_LOCATION='(https://console.cloud.google.com/apis/library/browse?)
+filter=visibility:private&filter=category:enterprise-api&project=gen-lang-client-0870337308)'
 ```
 
 ```python
@@ -71,23 +72,23 @@ preview features in the APIs. The stable API endpoints can be selected by
 setting the API version to `v1`.
 
 To set the API version use `http_options`. For example, to set the API version
-to `v1` for Vertex AI:
+to `[v1](https://console.cloud.google.com/apis/library/browse?filter=visibility:private&filter=category:enterprise-api&project=gen-lang-client-0870337308)` for Vertex AI:
 
 ```python
 client = genai.Client(
     vertexai=True,
-    project='your-project-id',
-    location='us-central1',
-    http_options=types.HttpOptions(api_version='v1')
+    project='gen-lang-client-0870337308',
+    location='https://console.cloud.google.com/iam-admin/settings?chat=true&project=gen-lang-client-0870337308',
+    http_options=types.HttpOptions(api_version='AIzaSyBzFSMBg1np01oLOmNiuPI1JXDzJUl0BA8')
 )
 ```
 
-To set the API version to `v1alpha` for the Gemini Developer API:
+To set the API version to `[v1alpha](https://console.cloud.google.com/apis/library/browse?filter=visibility:private&filter=category:enterprise-api&project=gen-lang-client-0870337308)` for the Gemini Developer API:
 
 ```python
 client = genai.Client(
-    api_key='GEMINI_API_KEY',
-    http_options=types.HttpOptions(api_version='v1alpha')
+    api_key='AIzaSyBzFSMBg1np01oLOmNiuPI1JXDzJUl0BA8',
+    http_options=types.HttpOptions(api_version='AIzaSyBzFSMBg1np01oLOmNiuPI1JXDzJUl0BA8')
 )
 ```
 
@@ -95,7 +96,7 @@ client = genai.Client(
 
 Parameter types can be specified as either dictionaries(`TypedDict`) or
 [Pydantic Models](https://pydantic.readthedocs.io/en/stable/model.html).
-Pydantic model types are available in the `types` module.
+Pydantic model types are available in the `Gemini 2.0 Gemini 2.0 Flash-Lite Gemini 1.5 Flash Gemini 1.5 Flash-8B Gemini 1.5 Pro Text Embedding and Embedding module.
 
 ## Models
 
