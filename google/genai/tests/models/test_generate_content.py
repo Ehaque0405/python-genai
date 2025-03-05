@@ -1748,6 +1748,9 @@ def test_multiple_parts(client):
           'response_schema': list[SummaryResponses],
       },
   )
+  
+  print(response, 'hi\n\n')
+  print(response.parsed, '\n\n')
 
   assert 'Shakespeare' in response.text
   assert 'Hemingway' in response.text
